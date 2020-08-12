@@ -1,14 +1,20 @@
 const express = require("express");
 const path = require("path");
-const app = express()
-const mongoose = require("mongoose")
-const bodyParser = require("body-parser")
-const methodOverride = require("method-override")
-app.use(bodyParser.urlencoded({extended:true}))
-app.use(express.static(path.join(__dirname) + "Public"))
-app.set("view engine","ejs")
-app.use(methodOverride("_method"))
-const url = `mongodb+srv://TechhUser:TechhPass@techhcluster.7lflw.mongodb.net/TechhDB?retryWrites=true&w=majority`
+const mongoose = require("mongoose");
+const methodOverride = require("method-override");
+require('dotenv').config();
+
+const Crud = require('./model/Crud');
+
+const app = express();
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+app.use(express.static(path.join(__dirname) + "Public"));
+app.set("view engine","ejs");
+app.use(methodOverride("_method"));
+
+const url = `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@techhcluster.7lflw.mongodb.net/${process.env.DB_NAME}?retryWrites=true&w=majority`
 const support = {
 	 useNewUrlParser:true,
 	 useUnifiedTopology:true,
@@ -19,21 +25,8 @@ const support = {
   else console.log("database Connected")
 })
 
-const crudSchema = mongoose.Schema({
- email:{
- 	type:String,
- 	required:true
- },
- password:{
- 	type:String,
- 	required:true
- }
-})
-
-const crud = mongoose.model("crud",crudSchema);
-
 app.get("/",(req,res)=>{
-	crud.find({},(err,data)=>{
+	Crud.find({},(err,data)=>{
      if(err) throw err;
      else res.render("index",{datas:data});
 	})
@@ -43,7 +36,7 @@ app.post("/",(req,res)=>{
        email:req.body.email,
        password:req.body.password
 	}
-	crud.create(data,(err,crud)=>{
+	Crud.create(data,(err,crud)=>{
 		if(err) throw err;
 		else console.log(crud)
 	})
@@ -51,7 +44,7 @@ app.post("/",(req,res)=>{
 })
 
 app.delete("/delete/:id",(req,res)=>{
-  crud.findByIdAndRemove(req.params.id,(err)=>{
+  Crud.findByIdAndRemove(req.params.id,(err)=>{
   	if(err) throw err;
     else console.log("Deleted : " + req.params.id);
   })
@@ -59,14 +52,14 @@ app.delete("/delete/:id",(req,res)=>{
 })
 
 app.get("/update/:id",(req,res)=>{
- crud.findById(req.params.id,(err,user)=>{
+ Crud.findById(req.params.id,(err,user)=>{
     if(err) throw err;
  	else res.render("update",{user:user})
  })
 })
 
 app.put("/update/:id",(req,res)=>{
-	crud.findByIdAndUpdate(req.params.id,{
+	Crud.findByIdAndUpdate(req.params.id,{
         email:req.body.email,
         password:req.body.password
 	},(err,user)=>{
@@ -75,7 +68,7 @@ app.put("/update/:id",(req,res)=>{
 	})
 })
 
-const port = process.env.Port || 3000
+const port = process.env.PORT || 3000
 app.listen(port,(err)=>{
 	if(err) throw err;
 	else console.log("Connected")
